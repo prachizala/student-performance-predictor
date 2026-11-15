@@ -169,11 +169,11 @@ Open your browser at `http://localhost:8501`.
 
 ---
 
-## 👤 Author & Academic Details
+## 👤 Author & Maintainer
 
-**Prachi Zala**  
-- **Degree:** Bachelor of Computer Applications (BCA)  
-- **Location:** Ahmedabad, Gujarat, India  
-- **Specialization:** Python Backend, AI & Data Analytics  
+**Prachi Zala (Zala Prachi)**  
+*Full Stack Developer at Udaan*  
 - **GitHub:** [@prachizala](https://github.com/prachizala)  
-- **LinkedIn:** [Prachi Zala](https://www.linkedin.com/in/prachi-zala-74a08b334/)
+- **LinkedIn:** [linkedin.com/in/zala-prachi-74a08b334](https://www.linkedin.com/in/zala-prachi-74a08b334/)  
+- **Portfolio:** [prachizala.github.io/prachi-portfolio](https://prachizala.github.io/prachi-portfolio/)  
+- **Location:** Ahmedabad, Gujarat, India
