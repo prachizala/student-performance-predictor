@@ -15,6 +15,7 @@ from model_engine import (
     get_feature_importances,
     load_dataset,
     compute_metrics,
+    benchmark_models,
     DATA_PATH
 )
 
@@ -62,10 +63,11 @@ pred = predict_final_score(
     extracurricular=1 if extracurricular else 0
 )
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Prediction & Advisory",
     "🔮 What-If Scenario Simulator",
-    "📈 Cohort Analytics & Dataset"
+    "📈 Cohort Analytics & Dataset",
+    "⚖️ Model Comparison Benchmark"
 ])
 
 # -----------------------------------------------------------------------------
@@ -153,3 +155,49 @@ with tab3:
         st.dataframe(df_cohort.describe().round(2), use_container_width=True)
     else:
         st.info("Dataset file not found.")
+
+# -----------------------------------------------------------------------------
+# TAB 4: MODEL COMPARISON BENCHMARK
+# -----------------------------------------------------------------------------
+with tab4:
+    st.subheader("Model Comparison Benchmark (OLS vs Random Forest)")
+    st.markdown(
+        "Evaluate regression predictive accuracy and statistical goodness-of-fit across "
+        "Ordinary Least Squares (OLS) Linear Regression, Random Forest Regressor, and Decision Tree baselines."
+    )
+
+    benchmarks = benchmark_models()
+
+    # Metric comparison cards for the top two models
+    ols_bench = next((b for b in benchmarks if "OLS" in b["model"]), None)
+    rf_bench = next((b for b in benchmarks if "Random Forest" in b["model"]), None)
+
+    if ols_bench and rf_bench:
+        bcol1, bcol2, bcol3, bcol4 = st.columns(4)
+        with bcol1:
+            st.metric("OLS R² Score", f"{ols_bench['r2']:.4f}")
+        with bcol2:
+            st.metric("Random Forest R² Score", f"{rf_bench['r2']:.4f}")
+        with bcol3:
+            st.metric("OLS MAE", f"{ols_bench['mae']:.2f} pts")
+        with bcol4:
+            st.metric("Random Forest MAE", f"{rf_bench['mae']:.2f} pts")
+
+    st.markdown("#### Comprehensive Benchmark Comparison Table")
+    bench_table_data = [
+        {
+            "Model Architecture": b["model"],
+            "R² Score (Variance Explained)": f"{b['r2']:.4f}",
+            "Mean Absolute Error (MAE)": f"{b['mae']:.2f}",
+            "Root Mean Squared Error (RMSE)": f"{b['rmse']:.2f}",
+            "Architecture & Behavioral Notes": b["description"]
+        }
+        for b in benchmarks
+    ]
+    st.dataframe(pd.DataFrame(bench_table_data), use_container_width=True)
+
+    st.info(
+        "💡 **Engineering Trade-off Insight:** While Random Forest and ensemble methods capture complex non-linear interactions, "
+        "OLS Linear Regression provides exact mathematical feature weights, transparent coefficient auditing for academic advisors, "
+        "and sub-millisecond deterministic inference."
+    )

@@ -4,7 +4,7 @@
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 [![Pandas](https://img.shields.io/badge/Data-Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
-[![Tests Passing](https://img.shields.io/badge/Tests-5%20Passing-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Tests-6%20Passing-10B981?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
 > **Predictive machine learning regression engine and early academic risk advisory dashboard evaluating study habits, attendance, and assignment discipline.**
@@ -98,6 +98,7 @@ Model goodness-of-fit and error dispersion are evaluated using:
 
 * 📈 **Continuous Grade Forecast:** Predicts real-time grade trajectories on a continuous scale ($0.0\%$ to $100.0\%$) with corresponding letter grades ($A+, A, B, C, F$).
 * 🚨 **Early Academic Risk Tiers:** Automated threshold alarms highlighting students needing immediate tutoring or faculty mentoring.
+* ⚖️ **Model Comparison Benchmark:** Comparative evaluation matrix benchmarking Ordinary Least Squares (OLS) Linear Regression against Decision Trees and Random Forest ensembles across $R^2$, MAE, and RMSE metrics.
 * 🔮 **Interactive What-If Scenario Planner:** Dynamic sliders allowing students to test actionable improvements before midterm exams.
 * 📊 **Cohort Analytics & Distributions:** Summary metrics and distribution visualizations across 500 curated student records.
 * 🧪 **Automated Test Coverage:** Unit test suite covering mathematical bounds, feature weights, monotonic study properties, and CSV schema validation.
@@ -120,7 +121,7 @@ student-performance-predictor/
 │   └── student_performance_data.csv   # Curated training and evaluation dataset
 │
 └── tests/
-    └── test_predictor.py       # Automated unit tests (5/5 passing)
+    └── test_predictor.py       # Automated unit tests (6/6 passing)
 ```
 
 ---
@@ -149,7 +150,7 @@ pip install -r requirements.txt
 ```bash
 python -m unittest tests/test_predictor.py
 ```
-*(All 5 tests will pass in under 0.05 seconds).*
+*(All 6 tests will pass in under 0.20 seconds).*
 
 ### 4. Launch the Streamlit Web Application
 ```bash
