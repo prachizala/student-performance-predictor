@@ -15,6 +15,7 @@ from model_engine import (
     compute_metrics,
     predict_final_score,
     get_feature_importances,
+    benchmark_models,
     DATA_PATH
 )
 
@@ -72,6 +73,22 @@ class TestStudentPredictor(unittest.TestCase):
         imps = get_feature_importances()
         total_pct = sum(item["importance_pct"] for item in imps)
         self.assertAlmostEqual(total_pct, 100.0, delta=1.0)
+
+    def test_benchmark_models_comparison(self):
+        benchmarks = benchmark_models()
+        self.assertEqual(len(benchmarks), 3)
+        model_names = [b["model"] for b in benchmarks]
+        self.assertIn("OLS Linear Regression", model_names)
+        self.assertIn("Random Forest Regressor", model_names)
+        self.assertIn("Decision Tree Regressor", model_names)
+
+        for b in benchmarks:
+            self.assertIn("r2", b)
+            self.assertIn("mae", b)
+            self.assertIn("rmse", b)
+            self.assertGreater(b["r2"], 0.5)
+            self.assertGreater(b["mae"], 0.0)
+            self.assertGreater(b["rmse"], 0.0)
 
 
 if __name__ == "__main__":

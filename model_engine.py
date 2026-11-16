@@ -8,6 +8,7 @@ alongside standard scikit-learn pipeline support.
 import os
 import csv
 import math
+import random
 from typing import Dict, List, Tuple, Any
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "student_performance_data.csv")
@@ -150,4 +151,113 @@ def get_feature_importances() -> List[Dict[str, Any]]:
     return [
         {"feature": k, "importance_pct": round((v / total) * 100, 1)}
         for k, v in sorted(raw_weights.items(), key=lambda x: x[1], reverse=True)
+    ]
+
+
+def benchmark_models(csv_path: str = DATA_PATH) -> List[Dict[str, Any]]:
+    """Benchmarks and compares model performance metrics (R2, MAE, RMSE).
+
+    Compares the baseline Ordinary Least Squares (OLS) Linear Regression model
+    against non-linear Decision Tree and Random Forest Regressor models on the
+    student cohort dataset. Supports both scikit-learn when available and an
+    analytical pure-Python fallback.
+    """
+    _, X, y = load_dataset(csv_path)
+
+    # 1. OLS Linear Regression Baseline
+    y_pred_ols = [
+        predict_final_score(r[0], r[1], r[2], r[3], r[4], int(r[5]))["predicted_score"]
+        for r in X
+    ]
+    ols_metrics = compute_metrics(y, y_pred_ols)
+
+    try:
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.tree import DecisionTreeRegressor
+
+        rf = RandomForestRegressor(n_estimators=100, max_depth=6, random_state=42)
+        rf.fit(X, y)
+        rf_metrics = compute_metrics(y, [float(p) for p in rf.predict(X)])
+
+        dt = DecisionTreeRegressor(max_depth=5, random_state=42)
+        dt.fit(X, y)
+        dt_metrics = compute_metrics(y, [float(p) for p in dt.predict(X)])
+    except ImportError:
+        # Lightweight pure-Python decision tree & ensemble implementation
+        def fit_tree(X_sub: List[List[float]], y_sub: List[float], depth: int = 0, max_depth: int = 4) -> Any:
+            if depth >= max_depth or len(y_sub) <= 8:
+                return sum(y_sub) / len(y_sub) if y_sub else 0.0
+            best_feat, best_thresh, best_err = None, None, float("inf")
+            for feat in range(len(X_sub[0])):
+                vals = sorted(set(row[feat] for row in X_sub))
+                step = max(1, len(vals) // 6)
+                for t in vals[::step]:
+                    left_y = [y_sub[i] for i, r in enumerate(X_sub) if r[feat] <= t]
+                    right_y = [y_sub[i] for i, r in enumerate(X_sub) if r[feat] > t]
+                    if not left_y or not right_y:
+                        continue
+                    m_l, m_r = sum(left_y) / len(left_y), sum(right_y) / len(right_y)
+                    err = sum((v - m_l) ** 2 for v in left_y) + sum((v - m_r) ** 2 for v in right_y)
+                    if err < best_err:
+                        best_err, best_feat, best_thresh = err, feat, t
+            if best_feat is None:
+                return sum(y_sub) / len(y_sub) if y_sub else 0.0
+            left_X = [r for r in X_sub if r[best_feat] <= best_thresh]
+            left_y = [y_sub[i] for i, r in enumerate(X_sub) if r[best_feat] <= best_thresh]
+            right_X = [r for r in X_sub if r[best_feat] > best_thresh]
+            right_y = [y_sub[i] for i, r in enumerate(X_sub) if r[best_feat] > best_thresh]
+            return {
+                "feat": best_feat,
+                "thresh": best_thresh,
+                "left": fit_tree(left_X, left_y, depth + 1, max_depth),
+                "right": fit_tree(right_X, right_y, depth + 1, max_depth)
+            }
+
+        def predict_tree(node: Any, x: List[float]) -> float:
+            if not isinstance(node, dict):
+                return float(node)
+            if x[node["feat"]] <= node["thresh"]:
+                return predict_tree(node["left"], x)
+            return predict_tree(node["right"], x)
+
+        dt_node = fit_tree(X, y, max_depth=4)
+        dt_preds = [predict_tree(dt_node, x) for x in X]
+        dt_metrics = compute_metrics(y, dt_preds)
+
+        rng = random.Random(42)
+        forest = []
+        for _ in range(5):
+            indices = [rng.randint(0, len(X) - 1) for _ in range(len(X))]
+            sample_X = [X[i] for i in indices]
+            sample_y = [y[i] for i in indices]
+            forest.append(fit_tree(sample_X, sample_y, max_depth=5))
+
+        rf_preds = [
+            sum(predict_tree(tree, x) for tree in forest) / len(forest)
+            for x in X
+        ]
+        rf_metrics = compute_metrics(y, rf_preds)
+
+    return [
+        {
+            "model": "OLS Linear Regression",
+            "r2": ols_metrics["r2"],
+            "mae": ols_metrics["mae"],
+            "rmse": ols_metrics["rmse"],
+            "description": "Parametric linear regression with full explainability & constant inference speed"
+        },
+        {
+            "model": "Random Forest Regressor",
+            "r2": rf_metrics["r2"],
+            "mae": rf_metrics["mae"],
+            "rmse": rf_metrics["rmse"],
+            "description": "Non-linear ensemble combining bagging and feature subspace sampling"
+        },
+        {
+            "model": "Decision Tree Regressor",
+            "r2": dt_metrics["r2"],
+            "mae": dt_metrics["mae"],
+            "rmse": dt_metrics["rmse"],
+            "description": "Single recursive partitioning regression tree benchmark"
+        }
     ]
